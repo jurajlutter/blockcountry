@@ -31,5 +31,5 @@ Based on https://mirror.ideaz.sk/Software/SAGEtools/Tools/blockcountry.sh
 5) Optionally, activate `blockcountry_pf.sh` script in crontab. Example for `/etc/crontab`, each day on 1:00:
 
 ```
-0   1   *   *   *   root    /usr/local/sbin/blockcountry_pf.sh > /dev/null 2&1
+0   1   *   *   *   root    /usr/local/sbin/blockcountry_pf.sh by cn ru > /dev/null 2&1
 ```
