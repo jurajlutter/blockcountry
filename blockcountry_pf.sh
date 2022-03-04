@@ -9,9 +9,10 @@ readonly TABLENAME="countryblock"
 # Directory for storing rules files.
 readonly RULEDIR="/var/db/pf-countryblock"
 
-download_zone()
-{
+download_zone() {
 	local CNT=1
+	local ZONEURL=$1
+	local FNAME=$2
 
 	while [ ! -s "${FNAME}" ]; do
 		rm -f ${FNAME} >/dev/null 2>&1
@@ -47,6 +48,27 @@ download_zone()
 		esac
 		CNT=$((CNT + 1))
 	done
+}
+
+download_and_add() {
+    local var=$1
+    FNAMES="${RULEDIR}/${var}-aggregated.zone ${RULEDIR}/${var}-aggregated6.zone"
+    set -- ${FNAMES}
+    ZONEURLS="https://www.ipdeny.com/ipblocks/data/aggregated/${var}-aggregated.zone https://www.ipdeny.com/ipv6/ipaddresses/aggregated/${var}-aggregated.zone"
+    for ZONEURL in ${ZONEURLS}; do
+      FNAME=$1
+      shift
+      if [ ! -s "${FNAME}" ]; then
+          [ -t 1 ] && echo "File '${FNAME}' does not exist. Trying download from '${ZONEURL}'."
+          download_zone ${ZONEURL} ${FNAME}
+          if [ ! -s "${FNAME}" ]; then
+              [ -t 1 ] && echo "Zone for '${var}' not present, skipping..."
+              return
+          fi
+      fi
+      [ -t 1 ] && echo "Adding zone '${var}' to blocklist"
+      /sbin/pfctl -q -Tadd -t ${TABLENAME} -f ${FNAME}
+    done
 }
 
 usage() {
@@ -87,18 +109,7 @@ if [ ! -d "${RULEDIR}" ]; then
 fi
 
 for var in "$@"; do
-	FNAME="${RULEDIR}/${var}-aggregated.zone"
-	ZONEURL="https://www.ipdeny.com/ipblocks/data/aggregated/${var}-aggregated.zone"
-	if [ ! -s "${FNAME}" ]; then
-		[ -t 1 ] && echo "File '${FNAME}' does not exist. Trying download from '${ZONEURL}'."
-		download_zone
-		if [ ! -s "${FNAME}" ]; then
-			[ -t 1 ] && echo "Zone for '${var}' not present, skipping..."
-			continue
-		fi
-	fi
-	[ -t 1 ] && echo "Adding zone '${var}' to blocklist"
-	/sbin/pfctl -q -Tadd -t ${TABLENAME} -f ${FNAME}
+    download_and_add "${var}"
 done
 
 exit 0
