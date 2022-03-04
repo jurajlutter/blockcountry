@@ -3,6 +3,8 @@
 A script for downloading rules from `https://www.ipdeny.com` and applying them
 to FreeBSD's `pf` firewall.
 
+Based on https://mirror.ideaz.sk/Software/SAGEtools/Tools/blockcountry.sh
+
 ## Usage:
 
 1) Adjust TABLENAME and/or RULEDIR atop of `blockcountry_pf.sh` script
