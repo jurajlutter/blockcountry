@@ -13,27 +13,35 @@ download_zone()
 {
 	local CNT=1
 
-	while [ ! -s "$FNAME" ]; do
-		rm -f $FNAME >/dev/null 2>&1
+	while [ ! -s "${FNAME}" ]; do
+		rm -f ${FNAME} >/dev/null 2>&1
 		case $CNT in
 		1)
-			echo "Try ${CNT}: curl https"
-			curl -f ${ZONEURL} > $FNAME 2>/dev/null
+			echo "Try ${CNT}: fetch https"
+			fetch -q -o ${FNAME} ${ZONEURL}
 			;;
 		2)
-			echo "Try ${CNT}: wget https"
-			wget -q ${ZONEURL} -O $FNAME >/dev/null 2>&1
+			echo "Try ${CNT}: curl https"
+			curl -f ${ZONEURL} > ${FNAME} 2>/dev/null
 			;;
 		3)
-			echo "Try ${CNT}: curl insecure https"
-			curl -f --insecure ${ZONEURL} > $FNAME 2>/dev/null
+			echo "Try ${CNT}: wget https"
+			wget -q ${ZONEURL} -O ${FNAME} >/dev/null 2>&1
 			;;
 		4)
+			echo "Try ${CNT}: fetch insecure https"
+			fetch -q --no-verify-hostname --no-verify-peer -o ${FNAME} ${ZONEURL}
+			;;
+		5)
+			echo "Try ${CNT}: curl insecure https"
+			curl -f --insecure ${ZONEURL} > ${FNAME} 2>/dev/null
+			;;
+		6)
 			echo "Try ${CNT}: wget insecure https"
-			wget -q --no-check-certificate ${ZONEURL} -O $FNAME >/dev/null 2>&1
+			wget -q --no-check-certificate ${ZONEURL} -O ${FNAME} >/dev/null 2>&1
 			;;
 		*)
-			rm -f $FNAME >/dev/null 2>&1
+			rm -f ${FNAME} >/dev/null 2>&1
 			break
 			;;
 		esac
@@ -68,12 +76,12 @@ EEOOMM
 	exit 1
 }
 
-[ -z "$1" ] && [ -t 1 ] && usage
+[ $# -lt 1 ] && [ -t 1 ] && usage
 
-if [ ! -d "$RULEDIR" ]; then
-	mkdir -p $RULEDIR
-	if [ ! -d "$RULEDIR" ]; then
-		[ -t 1 ] && echo "Unable to create directory $RULEDIR! Blocking will not work"
+if [ ! -d "${RULEDIR}" ]; then
+	mkdir -p ${RULEDIR}
+	if [ ! -d "${RULEDIR}" ]; then
+		[ -t 1 ] && echo "Unable to create directory ${RULEDIR}! Blocking will not work"
 		exit 1
 	fi
 fi
@@ -81,16 +89,16 @@ fi
 for var in "$@"; do
 	FNAME="${RULEDIR}/${var}-aggregated.zone"
 	ZONEURL="https://www.ipdeny.com/ipblocks/data/aggregated/${var}-aggregated.zone"
-	if [ ! -s "$FNAME" ]; then
-		[ -t 1 ] && echo "File '$FNAME' does not exist. Trying download from '$ZONEURL'."
+	if [ ! -s "${FNAME}" ]; then
+		[ -t 1 ] && echo "File '${FNAME}' does not exist. Trying download from '${ZONEURL}'."
 		download_zone
-		if [ ! -s "$FNAME" ]; then
+		if [ ! -s "${FNAME}" ]; then
 			[ -t 1 ] && echo "Zone for '${var}' not present, skipping..."
 			continue
 		fi
 	fi
 	[ -t 1 ] && echo "Adding zone '${var}' to blocklist"
-	/sbin/pfctl -q -Tadd -t $TABLENAME -f $FNAME
+	/sbin/pfctl -q -Tadd -t ${TABLENAME} -f ${FNAME}
 done
 
 exit 0
