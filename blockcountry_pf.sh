@@ -2,7 +2,7 @@
 
 # based on https://mirror.ideaz.sk/Software/SAGEtools/Tools/blockcountry.sh
 # WWW: https://github.com/jurajlutter/blockcountry
-#comment
+#comme
 # pf table name
 readonly TABLENAME="countryblock"
 
